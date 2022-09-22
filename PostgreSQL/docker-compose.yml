@@ -9,25 +9,10 @@ services:
       ./.env-docker
     environment:
       POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD_FILE: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: DB1
     volumes:
       - ./pgdata:/var/lib/postgresql/data
-    ports:
-      - '5432:5432'
-
-  multiple_db:
-    image: postgres:9.6
-    restart: always
-    env_file:
-      ./.env-docker
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD_FILE: ${DB_PASSWORD}
-      POSTGRES_MULTIPLE_DATABASES: "DB1,ownerOfDB1: DB2,ownerOfDB2: ... DB(n), ownerOfDB(n)"
-    volumes:
-      - ./pgdata:/var/lib/postgresql/data
-      - ./pg-init-scripts:/docker-entrypoint-initdb.d
     ports:
       - '5432:5432'
 
