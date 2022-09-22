@@ -2,13 +2,13 @@
 
 ---
 
-### Postgres
+### PostgreSQL
 
 docker-compose templates for hosting PostgreSQL containers, for both single and multiple databases
 
 ---
 
-### Rsync between two Directories
+### Rsync
 
 docker-compose template for syncing up two directories using Rsync
 
