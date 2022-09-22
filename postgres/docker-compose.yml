@@ -1,0 +1,32 @@
+version: '3.7'
+
+services:
+
+  single_db:
+    image: postgres:9.6
+    restart: always
+    environment:
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD_FILE: path/to/pwd/file
+      POSTGRES_DB: DB1
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+  multiple_db:
+    image: postgres:9.6
+    restart: always
+    environment:
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD_FILE: path/to/pwd/file
+      POSTGRES_MULTIPLE_DATABASES: "DB1,ownerOfDB1: DB2,ownerOfDB2: ... DB(n), ownerOfDB(n)"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./create-multiple-
+    ports:
+      - '5432:5432'
+
+
+
+
