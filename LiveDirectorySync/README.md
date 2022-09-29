@@ -17,12 +17,6 @@ container = curator_worker_1
 command = python pngcatchup.py
 ```
 ---
-.db_config holds the variables for your databases username, password and database name
-```
-DB_USER=someuser
-DB_PASSWORD=somepassword
-DB_PORT=5432
-```
 .worker_config holds the source and destination variables for the rsync worker
 ```
 WORKER_SRC=/mnt/src

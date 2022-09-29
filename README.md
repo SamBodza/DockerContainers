@@ -4,11 +4,11 @@
 
 ### PostgreSQL
 
-docker-compose templates for hosting PostgreSQL containers, for both single and multiple databases
+docker-compose templates for hosting PostgreSQL containers
 
 ---
 
-### Rsync
+### LiveDirectorySync
 
 docker-compose template for syncing up two directories using Rsync
 
