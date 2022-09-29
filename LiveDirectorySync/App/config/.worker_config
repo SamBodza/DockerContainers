@@ -1,0 +1,2 @@
+WORKER_SRC=/mnt/src
+WORKER_DST=/mnt/dst

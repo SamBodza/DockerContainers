@@ -1,0 +1,8 @@
+Runtime:
+  Hours: 3
+  Minutes: 30
+  Seconds: 0
+
+Filetypes:
+  - .+\.fda
+  - .+\.fda-
