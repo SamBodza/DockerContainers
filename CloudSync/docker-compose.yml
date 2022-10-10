@@ -1,0 +1,19 @@
+version: '3.7'
+
+services:
+  worker:
+    tty: true
+    restart: always
+    build:
+      context: .
+      network: host
+    volumes:
+      - {path_to_source}:/mnt/dst
+  scheduler:
+    image: mcuadros/ofelia:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./App/config/scheduler.ini:/etc/ofelia/config.yml
+    depends_on:
+      - worker
+    restart: always

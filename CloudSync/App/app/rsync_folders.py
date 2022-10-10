@@ -11,8 +11,8 @@ def get_folders_to_sync(logger):
 
     try:
         query = """
-        SELECT file_name
-        FROM pipeline.live_directory
+        SELECT folder_name
+        FROM heidelberg.live_directory
         WHERE up_to_date = False
         """
         fldrs = connect_single(logger, query, get=True)
@@ -21,7 +21,7 @@ def get_folders_to_sync(logger):
         if not fldrs:
             logging.info('All folders up to date, resetting')
             query_reset = """
-            UPDATE pipeline.live_directory
+            UPDATE heidelberg.live_directory
             SET up_to_date = False
             """
             connect_single(logger, query_reset)
@@ -42,7 +42,7 @@ def rsync_folder(fldr: str):
         dst = os.path.join(paths['dst_dir'], fldr[0])
         logging.debug(f'{src} : {dst}')
         if os.path.exists(src):
-            command = f'rsync -arvi {src} {dst}'
+            command = f'rsync -arvi {src}/ {dst}/'
             logging.debug(f'found folder {fldr}')
             text = os.popen(command).read().split()
 
@@ -60,15 +60,15 @@ def add_fldr_to_db(logger, fldr):
     try:
 
         query = f"""
-        INSERT INTO pipeline.working_directory
-            (file_name)
+        INSERT INTO heidelberg.working_directory
+            (folder_name)
         SELECT 
             '{fldr[0]}'
         WHERE
             NOT EXISTS (
-                SELECT file_name 
-                FROM pipeline.working_directory 
-                WHERE file_name = '{fldr[0]}');
+                SELECT folder_name 
+                FROM heidelberg.working_directory 
+                WHERE folder_name = '{fldr[0]}');
         """
 
         connect_single(logger, query)
@@ -80,18 +80,20 @@ def add_fldr_to_db(logger, fldr):
 def add_file_to_db(logger, fldr, fl):
     """Adds new file to db"""
 
-    logging.debug(f'adding {fldr}, into working files')
+    logging.debug(f'adding {fldr}, {fl} into working files')
     try:
         query = f"""
-                INSERT INTO pipeline.working_files
-                    (file_name)
+                INSERT INTO heidelberg.working_files
+                    (folder_name, file_name)
                 SELECT 
-                    '{fldr[0]}'
+                    '{fldr[0]}', '{fl}'
                 WHERE
                     NOT EXISTS (
-                        SELECT file_name 
-                        FROM pipeline.working_files 
-                        WHERE file_name = '{fldr[0]}');
+                        SELECT folder_name, file_name 
+                        FROM heidelberg.working_files 
+                        WHERE folder_name = '{fldr[0]}'
+                        AND file_name = '{fl}'
+                        );
                 """
 
         connect_single(logger, query)
@@ -100,21 +102,22 @@ def add_file_to_db(logger, fldr, fl):
         logging.critical(f'unable to get folders to sync')
 
 
-def update_file_in_db(logger, fldr):
+def update_file_in_db(logger, fldr, fl):
     """Changes uptodate column in DB to false if file is changed"""
 
     try:
         query = f"""
-        UPDATE pipeline.working_files
+        UPDATE heidelberg.working_files
         SET up_to_date = false
-        WHERE file_name = '{fldr[0]}'
+        WHERE folder_name = '{fldr[0]}'
+        AND file_name = '{fl}'
         """
 
         connect_single(logger, query)
-        logging.debug(f'updated {fldr} to not be up to date ')
+        logging.debug(f'updated {fldr}, {fl} to not be up to date ')
 
     except Exception as e:
-        logging.critical(f'unable to update file {fldr}')
+        logging.critical(f'unable to update file {fl}')
 
 
 def check_for_new_files(logger, fldr, text):
@@ -133,9 +136,9 @@ def update_dbs(logger, fldr: str):
     and live dir with new value"""
 
     query = f"""
-    UPDATE pipeline.live_directory
+    UPDATE heidelberg.live_directory
     SET up_to_date = True
-    WHERE file_name = '{fldr[0]}'
+    WHERE folder_name = '{fldr[0]}'
     """
     connect_single(logger, query)
 

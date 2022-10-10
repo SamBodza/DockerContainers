@@ -3,6 +3,8 @@ Runtime:
   Minutes: 30
   Seconds: 0
 
-Filetypes:
+Extensions:
   - .+\.fda
   - .+\.fda-
+
+Filetype: file
