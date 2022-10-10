@@ -98,7 +98,7 @@ def get_time_to_run(logger):
 
 
 def rsync_folders_for_time(logger):
-    """rsync as many folders as possible in 3 hours"""
+    """rsync as many folders as possible in set time"""
 
     time_out = get_time_to_run(logger)
     logger.info(f'set time out for {time_out}')
