@@ -1,4 +1,3 @@
-# Script to keep PostgreSQL Databases up to date
 import os
 from datetime import date
 

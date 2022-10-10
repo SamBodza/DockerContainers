@@ -4,6 +4,7 @@ import time
 
 from sql_connectors import connect_single
 from config_parser import get_config
+from yaml_parser import get_yaml
 
 
 def get_folders_to_sync(logger):
@@ -42,7 +43,7 @@ def rsync_folder(fldr: str):
         dst = os.path.join(paths['dst_dir'], fldr[0])
         logging.debug(f'{src} : {dst}')
         if os.path.exists(src):
-            command = f'rsync -arvi {src} {dst}'
+            command = f'rsync -avi {src} {dst}'
             logging.debug(f'found folder {fldr}')
             text = os.popen(command).read().split()
 
@@ -53,31 +54,7 @@ def rsync_folder(fldr: str):
         logging.error(f'failed to rsync {fldr} : {e}')
 
 
-def add_fldr_to_db(logger, fldr):
-    """Adds new fldr to db"""
-
-    logging.debug(f'adding {fldr} into working directory')
-    try:
-
-        query = f"""
-        INSERT INTO pipeline.working_directory
-            (file_name)
-        SELECT 
-            '{fldr[0]}'
-        WHERE
-            NOT EXISTS (
-                SELECT file_name 
-                FROM pipeline.working_directory 
-                WHERE file_name = '{fldr[0]}');
-        """
-
-        connect_single(logger, query)
-
-    except Exception as e:
-        logging.critical(f'unable to get folders to sync')
-
-
-def add_file_to_db(logger, fldr, fl):
+def add_file_to_db(logger, fldr):
     """Adds new file to db"""
 
     logging.debug(f'adding {fldr}, into working files')
@@ -100,34 +77,6 @@ def add_file_to_db(logger, fldr, fl):
         logging.critical(f'unable to get folders to sync')
 
 
-def update_file_in_db(logger, fldr):
-    """Changes uptodate column in DB to false if file is changed"""
-
-    try:
-        query = f"""
-        UPDATE pipeline.working_files
-        SET up_to_date = false
-        WHERE file_name = '{fldr[0]}'
-        """
-
-        connect_single(logger, query)
-        logging.debug(f'updated {fldr} to not be up to date ')
-
-    except Exception as e:
-        logging.critical(f'unable to update file {fldr}')
-
-
-def check_for_new_files(logger, fldr, text):
-    """Check rsync output to see if contains new files"""
-    for i in range(len(text)):
-        f = text[i]
-        logging.debug(f'adding files from {fldr} into working files')
-        if 'f+++' in f:
-            add_file_to_db(logger, fldr, text[i+1])
-        elif 'f.st' in f:
-            update_file_in_db(logger, fldr, text[i+1])
-
-
 def update_dbs(logger, fldr: str):
     """Update working dir db with new folder
     and live dir with new value"""
@@ -140,10 +89,18 @@ def update_dbs(logger, fldr: str):
     connect_single(logger, query)
 
 
+def get_time_to_run(logger):
+    """Get time to run from yaml file"""
+    yaml = get_yaml(logger)
+    added_time = int(yaml['Runtime']['Hours']) * 3600 + int(yaml['Runtime']['Minutes']) * 60 + int(
+        yaml['Runtime']['Seconds'])
+    return time.time() + added_time
+
+
 def rsync_folders_for_time(logger):
     """rsync as many folders as possible in 3 hours"""
 
-    time_out = time.time() + 60 * 60 * 3
+    time_out = get_time_to_run(logger)
     logger.info(f'set time out for {time_out}')
     fldrs = sorted(get_folders_to_sync(logger))
     logger.info(f'got {len(fldrs)} folders to sync')
@@ -153,10 +110,8 @@ def rsync_folders_for_time(logger):
             try:
                 text = rsync_folder(fldr)
                 logger.debug(f'syncing {fldr}')
-                add_fldr_to_db(logger, fldr)
+                add_file_to_db(logger, fldr)
                 logger.debug(f'added {fldr} to working dir')
-                check_for_new_files(logger, fldr, text)
-                logger.debug(f'checking {fldr} for new files')
                 update_dbs(logger, fldr)
                 logger.debug(f'updating liv dir for {fldr}')
             except Exception as e:
